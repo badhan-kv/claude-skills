@@ -15,3 +15,7 @@ cp -r ~/claude-skills/explain ~/.claude/skills/
 ```
 
 Invoke with `/explain <topic>`. To update later: `git pull`, then copy again.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
