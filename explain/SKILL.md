@@ -84,9 +84,6 @@ follows the number of missing prerequisites; do not pad, do not truncate the der
 
 - If the project has a reference-doc workflow or `docs/`, offer (once, one line) to record the
   explanation there. Do not write it without being asked.
-- Optionally save a short `user`-type memory of the user's gauged level in this domain (e.g.
-  "knows ray optics and TIR; new to wave optics, V-number, Gaussian beams") so the next
-  `/explain` in the domain skips known ground. Update, don't duplicate.
 - If the explanation exposed a gap in the project's docs (missing citation, unstated
   assumption), say so and offer to add it as a backlog item. Do not edit project files
   unprompted, and never mention AI tooling in project files.
