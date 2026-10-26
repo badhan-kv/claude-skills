@@ -1,6 +1,6 @@
 ---
 name: dependency-updates
-description: Check whether the project's dependencies, libraries, frameworks, base image or upstream forks have updates or fixes; list each with an explanation of its impact on this project (performance, security, bug fix, breaking change, irrelevant), then let the user choose what to do. Use when the user invokes /dependency-updates, asks "any updates to our dependencies/libraries?", "what's new upstream?", or wants to triage the Dependency updates inbox or the `Deps:` line in CHECKPOINT.md.
+description: Check whether the project's dependencies, libraries, frameworks, base image, host kernel or upstream forks have updates or fixes; list each with an explanation of its impact on this project (performance, security, bug fix, breaking change, irrelevant), then let the user choose what to do. Use when the user invokes /dependency-updates, asks "any updates to our dependencies/libraries?", "what's new upstream?", or wants to triage the Dependency updates inbox or the `Deps:` line in CHECKPOINT.md.
 ---
 
 # Dependency updates
@@ -29,6 +29,14 @@ against this project:
   for the item's issue number or topic (e.g. TR-13b, TR-13h).
 - **Security:** for a newer package release, check advisories for the pinned version, e.g.
   `gh api "/advisories?ecosystem=pip&affects=<pkg>@<pin>"`. Note CVEs fixed by the update.
+- **Kernel (host OS):** for a kernel package or Ubuntu security notice (USN), read the notice
+  (`https://ubuntu.com/security/notices/<id>`) and the package changelog
+  (`apt-get changelog linux-image-generic`). Say whether the fixes are exposed on this machine
+  (network-facing, local privilege escalation, GPU / driver, container or namespace issues) or
+  irrelevant to it (hardware or drivers it does not have). A kernel install needs a reboot:
+  check for a running training or render job first, confirm the NVIDIA driver rebuilds for the
+  new kernel (`nvidia-smi` afterwards), and note that containers share the host kernel.
+  Never install or reboot without the user's choice.
 - **Breaking risk:** deprecations, removed APIs, changed defaults, new minimum versions of
   torch / tensordict / CUDA / driver. A newer CUDA image needs the driver on `ew-sim` and the
   cloud hosts to support it.
@@ -36,7 +44,7 @@ against this project:
   verification the stories name (golden values, parity checks, step benchmark) and possibly
   rebuilding the image.
 
-Classify each item as one or more of: `bug fix`, `performance`, `security`, `feature`,
+Classify each item as one or more of: `bug fix`, `performance`, `security`, `kernel`, `feature`,
 `breaking`, `maintenance`, `irrelevant`. Tag every impact claim `verified (source)` or
 `unverified`; say plainly when a changelog was not found or not read.
 
