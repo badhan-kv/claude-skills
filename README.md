@@ -4,7 +4,7 @@ Claude Code skills: `explain`, `dependency-updates`.
 
 | Skill | Purpose |
 |---|---|
-| `explain` | Technical explanation tailored to the reader's background, gauged by questions first |
+| `explain` | Technical explanation tailored to the reader's background, gauged by questions first, then taught one small step at a time as a conversation |
 | `dependency-updates` | Lists upstream updates and fixes for a project's dependencies and host kernel with their impact on it, then lets you choose what to adopt. Written for one project: it expects `tools/dependency_watch.py`, a `BACKLOG.md` inbox and a `CHECKPOINT.md`; adapt those paths before reuse |
 
 ## Install

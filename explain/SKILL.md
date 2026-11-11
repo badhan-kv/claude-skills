@@ -1,14 +1,15 @@
 ---
 name: explain
 disable-model-invocation: true
-description: Explain a scientific or technical concept (or how part of the codebase works) at full technical depth, tailored to what the user already knows. First gauges the user's background with a few targeted questions, then gives a rigorous, prerequisite-ordered explanation using proper terminology. Only runs when the user invokes /explain.
+description: Explain a scientific or technical concept (or how part of the codebase works) at full technical depth, tailored to what the user already knows. First gauges the user's background with a few targeted questions, then teaches one small step at a time as a conversation, proposing the next step after each one. Only runs when the user invokes /explain.
 tools: Read, Grep, Glob, Bash, AskUserQuestion, WebSearch, WebFetch
 ---
 
 # Explain
 
-Rigorous, technical explanations calibrated to the user's actual background. Never simplify by
-dropping the science; close gaps by supplying the missing prerequisites instead.
+Rigorous, technical explanations calibrated to the user's actual background, delivered as a
+conversation: one small step per message, never one long dump. Never simplify by dropping the
+science; close gaps by supplying the missing prerequisites, one at a time.
 
 `/explain <topic>` — topic may be a concept, a function/file, or a "why" question. With no
 argument, take the topic from the preceding conversation.
@@ -18,8 +19,21 @@ argument, take the topic from the preceding conversation.
 - **Do not dumb down.** Use the correct technical and scientific terms. Elaborate each concept:
   what it is, why it holds, where it stops being valid. A term the user does not know is
   *defined and motivated*, not replaced by a vague synonym.
+- **No non-technical or non-scientific analogies or wording.** Explain with equations, geometry,
+  limit cases, worked numbers, diagrams in text, or code, not everyday metaphors.
+- **One step per message.** Each message teaches one idea. A chunk is small: roughly 5-10 lines,
+  one concept, at most one equation or one worked number. The depth comes from the sequence of
+  steps, not from the size of any one of them. If a step feels like it needs more room, it is two
+  steps.
+- **Never run ahead.** After a step, stop and wait for the user. Do not continue to the next
+  step, and do not pre-empt questions by adding "while we're here" material.
+- **Every message is self-contained.** Restate what the reader needs to follow it: what each
+  symbol means (with units), what each term means, what was concluded in the previous step.
+  This applies most to re-explanations. Do not make the user scroll up or remember a
+  definition, even if it was covered before. Keep the restatement to a clause or a line, not a
+  recap section.
 - **Calibrate with prerequisites, not with less content.** The gauging step finds which
-  prerequisites are missing; the explanation supplies those first, in dependency order.
+  prerequisites are missing; they are taught first, in dependency order, one per step.
 - **Ground it.** When the topic is in the codebase, read the actual code (cite
   `file_path:line_number`) and explain what it does, not what such code usually does. For
   general science, look up the standard source first (textbook, original paper, docs) and name it.
@@ -49,38 +63,52 @@ records it (check the memory index for an entry on this topic or domain).
    - Include a "Not sure" style option where it fits; "I don't know" is a valid answer.
 3. Read the answers as a map of gaps. A wrong answer or "not sure" marks a prerequisite to teach;
    a correct answer marks one to state briefly and move past.
+4. Turn the map into an ordered **queue of steps** (missing prerequisites in dependency order,
+   then the topic itself). Keep it in mind; do not print the whole queue as a lecture.
 
-### 2. Explain
+### 2. Teach, one step at a time
 
-Order the explanation by dependency, building from what the user has to what the topic needs:
+Start with the question being answered and the short answer in two sentences, then name the
+first step. After that, each message is one step from the queue:
 
-1. **State the question being answered** and the short answer in two sentences (the summary
-   the rest justifies).
-2. **Define notation once**, up front: every symbol, its units, and what it means physically.
-3. **Teach each missing prerequisite** as a numbered section: definition, the mechanism or
-   governing equation, the regime of validity, then a worked number (use the project's real
-   parameters when available, e.g. compute V for the actual fibre).
-4. **Connect to the topic**: derive or walk through the result step by step; show the limit
-   cases (what happens when a parameter goes to 0 or ∞) and what would break the assumption.
-5. **Map to the code** (if applicable): which line implements which step, and where the code
-   approximates or deviates from the theory.
-6. **Sources**: textbook/paper/standard reference for each non-obvious result, marked as
-   from memory vs looked up. Do not invent citations; if unsure, say so.
-7. **Check questions** (2-3), numerical or "what happens if", answerable from what was just
-   taught. These test understanding and set up the next round.
+- **Step content** (as the idea needs): definition, the mechanism or governing equation, the
+  regime of validity, a worked number (use the project's real parameters when available). Define
+  every symbol used, in this message, with units. For steps that connect to the topic: derive or
+  walk through the result, show limit cases, say what would break the assumption. For steps that
+  map to code: which line implements which part, and where the code approximates or deviates
+  from the theory. Cite a source inline for a non-obvious result, marked as from memory vs
+  looked up; do not invent citations.
+- **End with a proposal, not a question.** The last line names the next step so the user can
+  confirm in a word or two, e.g. "Next: the V-number and what it says about the number of guided
+  modes. Go on?" or "Next: how the code computes this (`coupling.py:88`)." Do not quiz the user
+  at the end of a step. If they are not satisfied they will ask; that is the signal.
+- Then **stop** and wait.
 
-Format: markdown with numbered sections and short headers; equations in inline code or plain
-text since output renders in a terminal; a small table only where it compares things. Length
-follows the number of missing prerequisites; do not pad, do not truncate the derivation.
+Format: short markdown, equations in inline code or plain text since output renders in a
+terminal; a small table only where it compares things. No long section structure, no numbered
+multi-part answers.
 
-### 3. Iterate
+### 3. Handle the reply
 
-- If the user answers the check questions or says a part is unclear, re-gauge *that part only*
-  (one or two targeted questions), then re-explain it from a different angle (different
-  analogy, different representation: equation, geometry, numeric example), not a repeat.
-- Track which prerequisites are now solid and do not re-teach them.
+- **Confirmation** ("ok", "yes", "go on"): acknowledge in a few words at most and give the next
+  step.
+- **Confusion or a question about the step**: answer that point only, at chunk size. For a
+  re-explanation, use a different technical angle (equation, geometry, limit case, numeric
+  example), not a repeat of the same wording and not a lay analogy, and restate the definitions
+  it relies on (symbols, terms, the previous conclusion) even if they were covered earlier.
+  Then propose resuming.
+- **Question about a term or symbol in the last chunk**: define it fully and briefly, then
+  propose continuing.
+- **Tangent**: answer it briefly, at chunk size, then ask whether to return, naming the exact
+  point left open, e.g. "Back to the overlap integral where we paused, or stay on this?"
+- **Several questions at once**: answer them one at a time, in order, each with enough context to
+  stand alone; if that makes the reply long, answer the first and say which are queued.
+- Track which steps are solid and do not re-teach them, other than the restated context above.
+  If the user's answers reveal a gap not in the queue, insert a step for it.
 
 ### 4. Keep the result
+
+At the end of the session, or when the user signals they are done:
 
 - If the project has a reference-doc workflow or `docs/`, offer (once, one line) to record the
   explanation there. Do not write it without being asked.
